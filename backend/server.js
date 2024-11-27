@@ -15,7 +15,7 @@ connectCloudinary()
 
 // middlewares
 app.use(cors({
-    origin: ['https://romantic-doctor-frontend.onrender.com', 'https://another-allowed-domain.com'],  // Địa chỉ frontend của bạn
+    origin: ['https://romantic-doctor-frontend.onrender.com', 'https://romantic-doctor-admin.onrender.com'],  // Địa chỉ frontend của bạn
     methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Các phương thức HTTP được phép
 }));
 app.use(express.json())
