@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema({
   address: { type: Object, default: { line1: "", line2: "" } },
   gender: { type: String, default: "Not Selected" },
   dob: { type: String, default: "Not Selected" },
-  phone: { type: String, default: "0000000000" }
+  phone: { type: String, default: "0000000000" },
+  lead_score :{type: Number, default:0}
 })
 
 const userModel = mongoose.models.user || mongoose.model('user', userSchema);

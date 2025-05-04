@@ -100,7 +100,8 @@ export const doctors = [
         address: {
             line1: '17th Cross, Richmond',
             line2: 'Circle, Ring Road, London'
-        }
+        },
+        imgLink: "https://www.vinmec.com/static//uploads/small_Anh_profile_BS_Frederick_Abel_ee29c0db8a.jpg"
     },
     {
         _id: 'doc2',

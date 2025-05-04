@@ -15,10 +15,12 @@ connectDB()
 connectCloudinary()
 
 // middlewares
-app.use(cors({
-    origin: ['https://romantic-doctor-frontend.onrender.com', 'https://romantic-doctor-admin.onrender.com'],  // Địa chỉ frontend của bạn
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Các phương thức HTTP được phép
-}));
+// app.use(cors({
+//     origin: ['https://romantic-doctor-frontend.onrender.com', 'https://romantic-doctor-admin.onrender.com'],  // Địa chỉ frontend của bạn
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Các phương thức HTTP được phép
+// }));
+
+app.use(cors());
 app.use(express.json())
 
 // api endpoints
@@ -29,6 +31,8 @@ app.use('/api/user', userRouter);
 
 app.get('/',(req,res) => {
     res.send('API WORKING')
+    console.log("Current domain: " + req.headers.origin)
+    console.log()
 })
 
 app.listen(port, ()=> console.log("Server Start", port))

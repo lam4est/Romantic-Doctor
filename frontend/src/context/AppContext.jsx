@@ -7,7 +7,7 @@ export const AppContext = createContext()
 const AppContextProvider = (props) => {
 
     const currencySymbol = '$'
-    const backendUrl = "https://romantic-doctor-backend.onrender.com"
+    const backendUrl = "http://localhost:4000"
     const [doctors,setDoctors] = useState([])
     const [token, setToken] = useState(localStorage.getItem('token') ? localStorage.getItem('token') : false)
     const [userData, setUserData] = useState(false)

@@ -1,57 +1,116 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { AppContext } from '../context/AppContext'
-import axios from 'axios'
-import { toast } from 'react-toastify'
-import {useNavigate} from 'react-router-dom'
+import React, { useContext, useEffect, useState } from 'react';
+import { AppContext } from '../context/AppContext';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const MyAppointments = () => {
+  const {userData} = useContext(AppContext)
+  const { backendUrl, token, getDoctorsData } = useContext(AppContext);
+  const [appointments, setAppointments] = useState([]);
+  const [email, setEmail] = useState("");
+  const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const { backendUrl, token, getDoctorsData } = useContext(AppContext)
-  const [appointments, setAppointments] = useState([])
-  const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  useEffect(() => {
+    const getEmail = async () => {
+
+    }
+  }, [])
 
   const slotDateFormat = (slotDate) => {
-    const dateArray = slotDate.split('_')
-    return dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2]
-  }
-
-  const navigate = useNavigate()
+    const dateArray = slotDate.split('_');
+    return dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2];
+  };
 
   const getUserAppointments = async () => {
-      try {
-        const {data} = await axios.get(backendUrl + '/api/user/appointments', {headers:{token}})
-        if(data.success){
-          setAppointments(data.appointments.reverse())
-          console.log(data.appointments);
-
-        }
-      } catch (error) {
-        console.log(error);
-        toast.error(error.message)
-      }
-  }
-
-  const cancelAppointment = async (appointmentId) => {
     try {
-      const {data} = await axios.post(backendUrl + '/api/user/cancel-appointment',{appointmentId},{headers:{token}})
-      if(data.success){
-        toast.success(data.message)
-        getUserAppointments()
-        getDoctorsData()
-      } else {
-        toast.error(data.message)
+      const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { token } });
+      if (data.success) {
+        setAppointments(data.appointments.reverse());
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.message)
+      toast.error(error.message);
     }
-  }
+  };
 
-  useEffect(()=>{
-    if(token){
-      getUserAppointments()
+  const cancelAppointment = async (appointmentId) => {
+    try {
+      const { data } = await axios.post(
+        backendUrl + '/api/user/cancel-appointment',
+        { appointmentId,
+          email: userData.email || null
+         },
+        { headers: { token } }
+      );
+      if (data.success) {
+        toast.success(data.message);
+        getUserAppointments();
+        getDoctorsData();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
     }
-  },[token])
+  };
+
+  const payOnline = async (appointmentId) => {
+    try {
+      const { data } = await axios.post(
+        backendUrl + '/api/user/payment-paypal',
+        { appointmentId },
+        { headers: { token } }
+      );
+      if (data.success) {
+        window.location.href = data.redirectUrl;
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error('Error initiating payment');
+    }
+  };
+
+  const capturePayment = async (orderId, appointmentId) => {
+    try {
+      const { data } = await axios.post(
+        backendUrl + '/api/user/capture-paypal-payment',
+        { orderId, appointmentId },
+        { headers: { token } }
+      );
+      if (data.success) {
+        toast.success(data.message);
+        getUserAppointments(); 
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error('Error capturing payment');
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      getUserAppointments();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    const orderId = query.get("token");
+    const appointmentId = query.get("appointmentId");
+
+    if (orderId && appointmentId) {
+      capturePayment(orderId, appointmentId);
+      navigate("/my-appointments", { replace: true });
+    }
+  }, [location, navigate]);
 
   return (
     <div>
@@ -72,22 +131,44 @@ const MyAppointments = () => {
                 <span className='text-xs text-neutral-700 font-medium'>Date & Time :</span>
                 {slotDateFormat(item.slotDate)} | {item.slotTime}
               </p>
+              {item.payment && (
+                <p className='text-green-600 mt-1'>Paid</p>
+              )}
             </div>
             <div></div>
             <div className='flex flex-col gap-2 justify-end'>
-              {!item.cancelled && <button className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'>
-                Pay Online
-              </button>}
-              {!item.cancelled && <button onClick={()=>cancelAppointment(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'>
-                Cancel Appointment
-              </button>}
-              {item.cancelled && <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>Appointment cancelled</button>}
+              {!item.cancelled && !item.payment && (
+                <button
+                  onClick={() => payOnline(item._id)}
+                  className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'
+                >
+                  Pay Online
+                </button>
+              )}
+              {!item.cancelled && (
+                <button
+                  onClick={() => cancelAppointment(item._id)}
+                  className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'
+                >
+                  Cancel Appointment
+                </button>
+              )}
+              {item.cancelled && (
+                <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>
+                  Appointment cancelled
+                </button>
+              )}
+              {item.payment && (
+                <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>
+                  Paid
+                </button>
+              )}
             </div>
           </div>
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MyAppointments
+export default MyAppointments;

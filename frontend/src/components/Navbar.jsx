@@ -6,11 +6,8 @@ import { AppContext } from '../context/AppContext';
 const Navbar = () => {
 
     const navigate = useNavigate();
-
     const {token, setToken, userData} = useContext(AppContext)
-
     const [showMenu, setShowMenu] = useState(false)
-
     const logout = () =>{
         setToken(false)
         localStorage.removeItem('token')
