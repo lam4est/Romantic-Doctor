@@ -7,6 +7,7 @@ import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import axios from 'axios';
 import paypal from '@paypal/checkout-server-sdk';
+import crypto from 'crypto';
 
 // API to register user
 const registerUser = async (req, res) => {
@@ -346,6 +347,32 @@ const capturePaypalPayment = async (req, res) => {
     }
   };
 
+  const startChatSession = (req, res) => {
+    const sessionKey = crypto.randomBytes(16).toString('hex');
+    res.json({ success: true, sessionKey });
+  };  
+
+  const handleChatMessage = async (req, res) => {
+    try {
+      const { message, sessionKey } = req.body;
+      if (!message || !sessionKey) {
+        return res.json({ success: false, message: 'Message and sessionKey are required' });
+      }
+  
+      const n8nResponse = await axios.post('http://localhost:5678/webhook/chatbot', {
+        message,
+        sessionKey
+      });
+      console.log('n8n response:', n8nResponse.data); 
+  
+      const botReply = n8nResponse.data.reply || 'Xin lỗi, hệ thống không thể xử lý yêu cầu.';
+      res.json({ success: true, reply: botReply });
+    } catch (error) {
+      console.log('Error calling n8n webhook:', error.message);
+      res.json({ success: false, message: error.message });
+    }
+  };  
+
 export {
   registerUser,
   loginUser,
@@ -356,4 +383,6 @@ export {
   cancelAppointment,
   paymentPaypal,
   capturePaypalPayment,
+  handleChatMessage,
+  startChatSession
 };

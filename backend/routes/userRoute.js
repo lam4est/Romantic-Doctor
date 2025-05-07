@@ -8,7 +8,9 @@ import {
     registerUser, 
     updateProfile, 
     paymentPaypal, 
-    capturePaypalPayment 
+    capturePaypalPayment,
+    handleChatMessage,
+    startChatSession
 } from '../controllers/userController.js';
 import authUser from '../middlewares/authUser.js';
 import upload from '../middlewares/multer.js';
@@ -23,6 +25,8 @@ userRouter.post('/book-appointment', authUser, bookAppointment);
 userRouter.get('/appointments', authUser, listAppointment);
 userRouter.post('/cancel-appointment', authUser, cancelAppointment);
 userRouter.post('/payment-paypal', authUser, paymentPaypal); 
-userRouter.post('/capture-paypal-payment', authUser, capturePaypalPayment); 
+userRouter.post('/capture-paypal-payment', authUser, capturePaypalPayment); 4
+userRouter.post('/chat', handleChatMessage);
+userRouter.post('/start-chat-session', startChatSession);
 
 export default userRouter;
