@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments, faTimes, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
@@ -8,6 +8,8 @@ const ChatWidget = () => {
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Chào bạn! Chúng tôi có thể giúp gì?' }
   ]);
+
+  const bottomRef = useRef(null);
 
   useEffect(() => {
     const sessionKey = localStorage.getItem('chatSessionKey');
@@ -20,19 +22,24 @@ const ChatWidget = () => {
         .then(data => {
           if (data.success && data.sessionKey) {
             localStorage.setItem('chatSessionKey', data.sessionKey);
-          } else {
-            console.error('Không thể khởi tạo phiên chat.');
           }
         })
         .catch(err => console.error('Lỗi khi khởi tạo phiên chat:', err));
     }
   }, []);
 
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   const sendMessage = useCallback(async () => {
     if (!input.trim()) return;
 
     const newMessages = [...messages, { sender: 'user', text: input }];
     setMessages(newMessages);
+    setInput(''); // Reset input sau khi gửi
 
     const sessionKey = localStorage.getItem('chatSessionKey');
 
@@ -50,59 +57,26 @@ const ChatWidget = () => {
       console.log('Frontend error:', error.message);
       setMessages([...newMessages, { sender: 'bot', text: 'Lỗi kết nối đến máy chủ!' }]);
     }
-
-    setInput('');
   }, [input, messages]);
 
   const handleKeyPress = useCallback((e) => {
-    if (e.key === 'Enter') sendMessage();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendMessage();
+    }
   }, [sendMessage]);
 
-  const parseDoctorInfo = (text) => {
-    if (!text || typeof text !== 'string' || !text.includes('*   **Bác sĩ')) return null;
-    const doctors = [];
-    const lines = text.split('\n');
-    let introText = '';
-    let outroText = '';
-    let currentDoctor = null;
-    let doctorStartIndex = -1;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (line.startsWith('*   **Bác sĩ')) {
-        if (currentDoctor) doctors.push(currentDoctor);
-        doctorStartIndex = i;
-        const nameMatch = line.match(/\*   \*\*Bác sĩ (.*?):\*\*/);
-        currentDoctor = { name: nameMatch ? nameMatch[1].trim() : '' };
-      } else if (doctorStartIndex === -1) {
-        introText += (introText ? '\n' : '') + line;
-      } else if (currentDoctor && line.startsWith('*   **')) {
-        if (line.includes('**Chuyên khoa:**')) {
-          currentDoctor.specialty = line.replace('*   **Chuyên khoa:** ', '').trim();
-        } else if (line.includes('**Kinh nghiệm:**')) {
-          currentDoctor.experience = line.replace('*   **Kinh nghiệm:** ', '').trim();
-        } else if (line.includes('**Địa chỉ:**')) {
-          currentDoctor.address = line.replace('*   **Địa chỉ:** ', '').trim();
-        } else if (line.includes('**Phí khám:**')) {
-          currentDoctor.fee = line.replace('*   **Phí khám:** ', '').trim();
-        } else if (line.includes('**Hình ảnh:**')) {
-          const markdownImage = line.replace('*   **Hình ảnh:** ', '').trim();
-          const match = markdownImage.match(/\[(.*?)\]\((.*?)\)/);
-          currentDoctor.image = match ? match[2] : markdownImage;
-        }
-      } else if (currentDoctor && !line.startsWith('*') && line) {
-        if (doctors.length === 0 || !doctors.includes(currentDoctor)) {
-          doctors.push(currentDoctor);
-        }
-        outroText += (outroText ? '\n' : '') + line;
-      }
+  const parseDoctorJSON = (text) => {
+    try {
+      const cleaned = text
+        .replace(/^```json\s*/i, '')
+        .replace(/```$/, '')
+        .trim();
+      const parsed = JSON.parse(cleaned);
+      return parsed?.doctors || null;
+    } catch (err) {
+      return null;
     }
-
-    if (currentDoctor && !doctors.includes(currentDoctor)) {
-      doctors.push(currentDoctor);
-    }
-
-    return doctors.length > 0 ? { introText: introText.trim(), doctors, outroText: outroText.trim() } : null;
   };
 
   const DoctorCard = React.memo(({ doctor }) => (
@@ -111,7 +85,7 @@ const ChatWidget = () => {
         <img
           src={doctor.image}
           alt={`Ảnh bác sĩ ${doctor.name}`}
-          className="w-full h-40 object-cover rounded-md mb-2"
+          className="w-full h-40 object-contain rounded-md mb-2"
         />
       )}
       <h4 className="text-lg font-semibold text-gray-800">{doctor.name}</h4>
@@ -142,29 +116,19 @@ const ChatWidget = () => {
           </div>
           <div className="flex-1 p-4 overflow-y-auto space-y-2 text-sm">
             {messages.map((msg, idx) => {
-              const doctorInfo = msg.sender === 'bot' ? parseDoctorInfo(msg.text) : null;
+              const doctors = msg.sender === 'bot' ? parseDoctorJSON(msg.text) : null;
 
               return (
                 <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {doctorInfo ? (
+                  {doctors ? (
                     <div className="max-w-[80%] w-fit">
-                      {doctorInfo.introText && (
-                        <div className="px-4 py-2 rounded-2xl bg-gray-200 text-gray-800 rounded-bl-none shadow-sm mb-2 whitespace-pre-wrap break-words">
-                          {doctorInfo.introText}
-                        </div>
-                      )}
-                      {doctorInfo.doctors.map((doctor, i) => (
+                      {doctors.map((doctor, i) => (
                         <DoctorCard key={i} doctor={doctor} />
                       ))}
-                      {doctorInfo.outroText && (
-                        <div className="px-4 py-2 rounded-2xl bg-gray-200 text-gray-800 rounded-bl-none shadow-sm mt-2 whitespace-pre-wrap break-words">
-                          {doctorInfo.outroText}
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <div
-                      className={`px-4 py-2 rounded-2xl shadow-sm text-sm whitespace-pre-wrap break-words
+                      className={`px-4 py-2 rounded-2xl shadow-sm whitespace-pre-wrap break-words text-sm
                         ${msg.sender === 'user' ? 'bg-blue-500 text-white rounded-br-none' : 'bg-gray-200 text-gray-800 rounded-bl-none'}
                         max-w-[80%] w-fit`}
                     >
@@ -174,6 +138,7 @@ const ChatWidget = () => {
                 </div>
               );
             })}
+            <div ref={bottomRef} />
           </div>
           <div className="p-2 border-t flex gap-2 items-center">
             <input
@@ -182,7 +147,7 @@ const ChatWidget = () => {
               placeholder="Nhập tin nhắn..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
             />
             <button onClick={sendMessage} className="text-blue-600 hover:text-blue-800">
               <FontAwesomeIcon icon={faPaperPlane} />
