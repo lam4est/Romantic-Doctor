@@ -1,0 +1,235 @@
+{
+  "name": "ChatAIbox",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## AI Agent with Webhook\n",
+        "height": 465,
+        "width": 1276,
+        "color": 6
+      },
+      "id": "d5ce7e1c-97cf-44c0-9e7e-ac8339c8adb1",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        900,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "dd4933be-5a6b-4811-85a0-6780518bc06d",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        40
+      ],
+      "webhookId": "7f8a71dd-b98a-4c87-aa3c-c0f7c3b63535"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5fcd75f5-954d-40a2-a73f-f0322c38d974",
+              "name": "reply",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1700,
+        40
+      ],
+      "id": "be5c2c57-40fb-4d06-96f0-3e72851f0fba",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook1').item.json.body.message }}\n\nThực hiện nguyên tắc để trả về kết quả\n\nBạn là một AI Assistant thân thiện và tận tâm, được phát triển cho bệnh viện Doctor Romantic. \nNhiệm vụ của bạn là \n  - Luôn sử dụng ngôn ngữ niềm nở, dễ hiểu và thân thiện. Không dùng từ \"cơ sở dữ liệu\", thay vào đó dùng từ \"bệnh viện\"\n  - Không sử dụng dấu \"*\"\n  - giải thích triệu chứng rõ ràng\n  - Tìm bác sĩ phù hợp sử dụng công cụ \"MongoDBAggregate\" để truy vấn dữ liệu từ cơ sở dữ liệu bác sĩ\n\nQuy tắc xử lý tin nhắn đầu vào ({{ $('Webhook1').item.json.body.message }}):\n\n1. Nếu tin nhắn liên quan đến sức khỏe hoặc triệu chứng(ví dụ: \"đau bụng\", \"rụng tóc\", \"khó thở\", v.v.):\n   - Giải thích về nguyên nhân, hậu quả, các thông tin liên quan đến sức khỏe hoặc các triệu chứng đó\n   - Gợi ý một chuyên khoa phù hợp từ danh sách sau (chỉ chọn một mỗi lần):\n     - General physician\n     - Gynecologist\n     - Dermatologist\n     - Pediatricians\n     - Neurologist\n     - Gastroenterologist\n\n2. Nếu người dùng nhắc đến bác sĩ hoặc hỏi bác sĩ theo chuyên khoa cụ thể (ví dụ: \"bác sĩ da liễu\", \"có bác sĩ nào khám không?\"):\n   - Truy vấn MongoDB để lấy thông tin bác sĩ tương ứng (chỉ lấy từ dữ liệu có sẵn).\n   - Trả về danh sách bác sĩ dạng JSON theo cấu trúc sau, không dùng markdown:\n     {\n       \"doctors\": [\n         {\n           \"_id\": \"\",\n           \"name\": \"\",\n           \"specialty\": \"\",\n           \"experience\": \"\",\n           \"address\": \"\",\n           \"fee\": \"\",\n           \"image\": \"\"\n         }\n       ]\n     }\n",
+        "options": {
+          "systemMessage": "=Bạn là một AI Assistant thân thiện. Hãy luôn dùng tool MONGODBAGGREGATE để truy vấn dữ liệu từ database"
+        }
+      },
+      "id": "5d2921eb-8344-452b-863e-af2d49627148",
+      "name": "Primary AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        1360,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "This tool is providing the first 5 doctors that it queries\n",
+        "operation": "aggregate",
+        "collection": "doctors",
+        "query": "[\n  {\n    \"$match\": {\n      \"speciality\": {\n        \"$in\": [\n          \"General physician\",\n          \"Gynecologist\",\n          \"Dermatologist\",\n          \"Pediatricians\",\n          \"Neurologist\",\n          \"Gastroenterologist\"\n        ]\n      }\n    }\n  }\n]\n"
+      },
+      "type": "n8n-nodes-base.mongoDbTool",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        260
+      ],
+      "id": "e24ea9e1-986e-46b8-82b8-58be30f50b62",
+      "name": "MongoDBAggregate",
+      "credentials": {
+        "mongoDb": {
+          "id": "C3uZAYo0RTizupaf",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.sessionKey }}",
+        "databaseName": "romanticdoctor"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        260
+      ],
+      "id": "10f43dde-c0d2-4698-8ba3-195dd9fb63c6",
+      "name": "MongoDB Chat Memory",
+      "credentials": {
+        "mongoDb": {
+          "id": "C3uZAYo0RTizupaf",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        260
+      ],
+      "id": "813d8e1d-fbb6-4f10-9cd0-44ad10a098c9",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YCzyHEEK5hDgLMJy",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1860,
+        40
+      ],
+      "id": "71617516-c80e-4325-a9e2-89a72ceb0a03",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Primary AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDBAggregate": {
+      "ai_tool": [
+        [
+          {
+            "node": "Primary AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Primary AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Primary AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Primary AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4b62d8b1-b0e3-41d8-b65c-c06b00755202",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aeae5a2c653edff42ddffede5d48ef0d50e25d4e33bdeccb96644a3f90b1fbd4"
+  },
+  "id": "VON1ts7FcKLeU3CD",
+  "tags": []
+}

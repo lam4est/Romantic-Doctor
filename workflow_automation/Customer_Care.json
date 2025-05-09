@@ -1,0 +1,1190 @@
+{
+  "name": "Customer Care",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b4e9f74f-8cbc-4467-8ba5-60da59a8c79b",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        100
+      ],
+      "id": "c39be5d2-4a3d-4855-8d2c-0002930b5ae1",
+      "name": "Webhook1",
+      "webhookId": "b4e9f74f-8cbc-4467-8ba5-60da59a8c79b"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a832f64e-13b5-4d38-a911-8de1e12992da",
+                    "leftValue": "={{ $json.body.event_type }}",
+                    "rightValue": "appointment-created",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Đặt lịch "
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0e9bbeef-8e94-46a6-8e1c-51b443b6c6be",
+                    "leftValue": "={{ $json.body.event_type }}",
+                    "rightValue": "appointment-cancelled",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Hủy lịch"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c7b52898-9ae3-461c-929f-35a101234cd5",
+                    "leftValue": "={{ $json.body.event_type }}",
+                    "rightValue": "appointment-payment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Thanh toán"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -120,
+        100
+      ],
+      "id": "9fa4a7ee-27c0-4e60-9435-5ba50ee24bf2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "61e0761f-b043-4ef0-9c0c-eb65ad84ab6e",
+              "name": "=Email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "192cdbb8-ca33-4886-8cc3-19820eb13aec",
+              "name": "body.name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "cca79187-cc01-4383-bbec-c9a8439dbd66",
+              "name": "body.date",
+              "value": "={{ $json.body.date }}",
+              "type": "string"
+            },
+            {
+              "id": "c1dfca49-914d-4eea-924d-bba2f5b581b4",
+              "name": "body.time",
+              "value": "={{ $json.body.time }}",
+              "type": "string"
+            },
+            {
+              "id": "612a9a90-3ff6-44b7-9fe5-064e3300f68a",
+              "name": "body.doctor",
+              "value": "={{ $json.body.doctor }}",
+              "type": "string"
+            },
+            {
+              "id": "4c267473-c6a8-4cd8-8c0d-002e93ad7b2c",
+              "name": "body.fees",
+              "value": "={{ $json.body.fees }}",
+              "type": "number"
+            },
+            {
+              "id": "1bd0d073-9b95-4e59-9ecd-41ba3bffc410",
+              "name": "body.phone",
+              "value": "={{ $json.body.phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        100,
+        -100
+      ],
+      "id": "773e5263-3ec6-4250-905c-50dcb9f72651",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "Đặt lịch hẹn thành công !",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <style>\n        .container {\n            font-family: Arial, sans-serif;\n            padding: 20px;\n            border: 1px solid #ddd;\n            border-radius: 10px;\n            background-color: #f9f9f9;\n        }\n        .header {\n            font-size: 20px;\n            font-weight: bold;\n            color: #0056b3;\n        }\n        .content {\n            margin-top: 10px;\n            font-size: 16px;\n        }\n        .important {\n            margin-top: 15px;\n            font-size: 16px;\n            font-weight: bold;\n            color: #d9534f; /* Màu đỏ để nhấn mạnh */\n        }\n        .footer {\n            margin-top: 20px;\n            font-size: 14px;\n            color: #888;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <p class=\"header\">Xin chào {{ $json.body.name }},</p>\n        <p class=\"content\">\n            Lịch hẹn khám bệnh của bạn với bác sĩ <strong>{{ $json.body.doctor }}</strong> đã được xác nhận.<br>\n            📅 Ngày: <strong>{{ $json.body.date }}</strong><br>\n            🕒 Giờ: <strong>{{ $json.body.time }}</strong><br>\n            📍 Địa điểm: <strong>Phòng khám Meo Meo</strong><br><br>\n            Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\n        </p>\n        \n        <p class=\"important\">\n            ⚠ Vui lòng thanh toán mức phí <strong> {{ $('Switch').item.json.body.fees }} USD </strong> trong vòng <strong>30 phút</strong>, nếu không cuộc hẹn sẽ bị hủy.\n        </p>\n\n        <p class=\"footer\">\n            Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!<br>\n            --<br>\n            Đội ngũ hỗ trợ Phòng khám Meo Meo\n        </p>\n    </div>\n</body>\n</html>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        320,
+        -100
+      ],
+      "id": "950d4d8c-dc97-4546-92ab-c87a35b6b4a7",
+      "name": "Gmail",
+      "webhookId": "90f030c7-8a8b-4c3f-84cf-e14492732636",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nIdbLIu5f55l0ovG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Switch').item.json.body.email }}",
+        "subject": "Thông báo hủy lịch hẹn",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <style>\n        .container {\n            font-family: Arial, sans-serif;\n            padding: 20px;\n            border: 1px solid #ddd;\n            border-radius: 10px;\n            background-color: #f9f9f9;\n        }\n        .header {\n            font-size: 20px;\n            font-weight: bold;\n            color: #d9534f;\n        }\n        .content {\n            margin-top: 10px;\n            font-size: 16px;\n        }\n        .footer {\n            margin-top: 20px;\n            font-size: 14px;\n            color: #888;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <p class=\"header\">Xin chào {{ $json.body.name }},</p>\n        <p class=\"content\">\n            Chúng tôi rất tiếc khi nhận được yêu cầu hủy lịch hẹn của bạn với bác sĩ <strong>{{ $json.body.doctor }}</strong>.<br>\n            📅 Ngày: <strong>{{ $json.body.date }}</strong><br>\n            🕒 Giờ: <strong>{{ $json.body.time }}</strong><br>\n            📍 Địa điểm: <strong>Phòng khám Meo Meo</strong><br><br>\n            Nếu bạn muốn đặt lại lịch hẹn hoặc có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\n        </p>\n        <p class=\"footer\">Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!<br>--<br>Đội ngũ hỗ trợ Phòng khám Meo Meo</p>\n    </div>\n</body>\n</html>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        320,
+        100
+      ],
+      "id": "be16a57b-5514-466a-a68f-0764c159b60e",
+      "name": "Gmail1",
+      "webhookId": "0609fea1-3425-4a8d-9c34-35a715312d53",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nIdbLIu5f55l0ovG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "61e0761f-b043-4ef0-9c0c-eb65ad84ab6e",
+              "name": "=Email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "192cdbb8-ca33-4886-8cc3-19820eb13aec",
+              "name": "body.name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "cca79187-cc01-4383-bbec-c9a8439dbd66",
+              "name": "body.date",
+              "value": "={{ $json.body.date }}",
+              "type": "string"
+            },
+            {
+              "id": "c1dfca49-914d-4eea-924d-bba2f5b581b4",
+              "name": "body.time",
+              "value": "={{ $json.body.time }}",
+              "type": "string"
+            },
+            {
+              "id": "612a9a90-3ff6-44b7-9fe5-064e3300f68a",
+              "name": "body.doctor",
+              "value": "={{ $json.body.doctor }}",
+              "type": "string"
+            },
+            {
+              "id": "d9395b82-1ccc-4220-a8bb-47034768a4e7",
+              "name": "body.phone",
+              "value": "={{ $json.body.phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        100,
+        100
+      ],
+      "id": "57f5e0ac-e264-49b2-8064-a14b2ac60bcf",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Switch').item.json.body.user_email }}",
+        "subject": "Thanh toán thành công !",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Xác nhận thanh toán - Phòng khám ABC</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; color: #333; line-height: 1.6;\">\n    <div style=\"max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;\">\n        <h2 style=\"color: #007bff;\">Xác nhận thanh toán thành công</h2>\n        <p>Xin chào <strong>{{ $('Switch').item.json.body.user_name }} </strong>,</p>\n        <p>Chúng tôi trân trọng thông báo rằng bạn đã **thanh toán thành công** cho buổi khám bệnh với bác sĩ <strong>{{ $('Switch').item.json.body.doctor_name }}</strong>.</p>\n        \n        <h3>Thông tin thanh toán:</h3>\n        <ul>\n            <li><strong>Tên khách hàng:</strong> {{ $('Switch').item.json.body.user_name }}</li>\n            <li><strong>Số tiền thanh toán:</strong> <span style=\"color: #28a745;\"> {{ $('Switch').item.json.body.amount }} USD</span></li>\n        </ul>\n\n        <p>Thời gian :{{ $('Switch').item.json.body.slot_time }} , ngày {{ $('Switch').item.json.body.slot_date }} </p>\n\n        <p>Chúng tôi rất mong được phục vụ bạn. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua email hoặc số điện thoại hỗ trợ.</p>\n        \n        <p>Trân trọng,</p>\n        <p><strong>Phòng khám Meo Meo</strong></p>\n        <p><em>Hotline: 0123 456 789 | Email: support@phongkhammeomeo.com</em></p>\n    </div>\n</body>\n</html>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        320,
+        460
+      ],
+      "id": "34b45738-ef59-4c43-a455-4281e1830e03",
+      "name": "Gmail2",
+      "webhookId": "c3b1d465-b7fc-4f77-856e-f92570089604",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nIdbLIu5f55l0ovG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3f92d06b-8000-4080-866f-7443d5ac3219",
+              "name": "body.userEmail",
+              "value": "={{ $('Webhook1').item.json.body.user_email }}",
+              "type": "string"
+            },
+            {
+              "id": "4af8e587-8a3c-496d-86ee-2a466a26f192",
+              "name": "body.userName",
+              "value": "={{ $('Webhook1').item.json.body.user_name }}",
+              "type": "string"
+            },
+            {
+              "id": "955e5c0e-d2a3-4721-85cc-01d41c62d86d",
+              "name": "body.doctorName",
+              "value": "={{ $('Webhook1').item.json.body.doctor_name }}",
+              "type": "string"
+            },
+            {
+              "id": "d016774e-cf56-47e5-a8e5-4f30baeed716",
+              "name": "body.slotTime",
+              "value": "={{ $('Webhook1').item.json.body.slot_time }}",
+              "type": "string"
+            },
+            {
+              "id": "b4dd708f-06f1-49dc-8f75-33777b4e892b",
+              "name": "body.slotDate",
+              "value": "={{ $('Webhook1').item.json.body.slot_date }}",
+              "type": "string"
+            },
+            {
+              "id": "e6db636a-1c78-4d27-b9ab-a13d84c6c233",
+              "name": "body.amount",
+              "value": "={{ $('Webhook1').item.json.body.amount }}",
+              "type": "number"
+            },
+            {
+              "id": "391a404e-13da-4cb3-abd8-bddc2e651964",
+              "name": "body.lead_score",
+              "value": "={{ $('Webhook1').item.json.body.lead_score }}",
+              "type": "number"
+            },
+            {
+              "id": "979e95ac-d01e-4c00-a5e0-5023035c13d8",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        100,
+        360
+      ],
+      "id": "8b3088d1-e8c4-4ced-89c1-62df7a66f54d",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "9114084e-dc52-4930-a740-d5d554e6fbba",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        1160
+      ],
+      "id": "cd94b823-6a1a-43ba-889e-810e29eecb60",
+      "name": "Webhook",
+      "webhookId": "9114084e-dc52-4930-a740-d5d554e6fbba"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3baad701-3434-4a11-8e90-f0d00af3fcbc",
+              "name": "body.userId",
+              "value": "={{ $json.body.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "27863b0d-dad6-41b7-8280-e1df5857ce97",
+              "name": "body.lead_score",
+              "value": "={{ $json.body.lead_score }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -40,
+        1160
+      ],
+      "id": "1622ac29-c286-4b09-a21d-3e06e3ef490f",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "collection": "users",
+        "options": {},
+        "query": "={\"email\": \"{{ $json.body.email }}\"}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -40,
+        1420
+      ],
+      "id": "65e73f6a-d42b-4329-b8e9-bdfb022b121e",
+      "name": "MongoDB2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "C3uZAYo0RTizupaf",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "users",
+        "updateKey": "email",
+        "fields": "=lead_score",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        620,
+        1320
+      ],
+      "id": "81bfd686-ba4b-4218-9069-e8d30b547727",
+      "name": "MongoDB3",
+      "credentials": {
+        "mongoDb": {
+          "id": "C3uZAYo0RTizupaf",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96e57ecd-fd86-43d1-b10e-ccccdd988fbf",
+              "name": "_id",
+              "value": "={{ $json._id }}",
+              "type": "string"
+            },
+            {
+              "id": "64fc21da-b31c-40c1-8abf-f61100b92ad8",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "606b8e09-4691-4f51-a040-189ba1f4e887",
+              "name": "lead_score",
+              "value": "={{ $json.lead_score + 10 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        1320
+      ],
+      "id": "a628383d-2225-4b43-bac2-8c5c7fd27883",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bc416fab-18e8-462b-ac49-40b1a43b2eb8",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        1420
+      ],
+      "id": "02320601-4f7e-4c2b-b5a4-c3916236d758",
+      "name": "Webhook2",
+      "webhookId": "bc416fab-18e8-462b-ac49-40b1a43b2eb8"
+    },
+    {
+      "parameters": {
+        "sendHTML": true,
+        "subject": "OK",
+        "htmlContent": "=<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Tri Ân Khách Hàng</title>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            background-color: #f4f4f4;\n            margin: 0;\n            padding: 0;\n        }\n        .email-container {\n            max-width: 600px;\n            margin: 20px auto;\n            background: #ffffff;\n            padding: 20px;\n            border-radius: 8px;\n            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\n            text-align: center;\n        }\n        .email-header {\n            font-size: 24px;\n            font-weight: bold;\n            color: #333;\n        }\n        .email-body {\n            font-size: 16px;\n            color: #555;\n            margin: 20px 0;\n        }\n        .btn {\n            display: inline-block;\n            padding: 12px 24px;\n            color: #fff;\n            background-color: #007bff;\n            text-decoration: none;\n            border-radius: 5px;\n            font-size: 18px;\n        }\n        .btn:hover {\n            background-color: #0056b3;\n        }\n        .footer {\n            margin-top: 20px;\n            font-size: 14px;\n            color: #777;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"email-container\">\n        <div class=\"email-header\">Cảm ơn Quý Khách Hàng!</div>\n        <div class=\"email-body\">\n            Chúng tôi trân trọng cảm ơn sự ủng hộ của quý khách. Nhờ có bạn, chúng tôi có thể phát triển và mang lại dịch vụ tốt nhất.\n        </div>\n        <a href=\"https://yourwebsite.com\" class=\"btn\">Truy cập Website</a>\n        <div class=\"footer\">&copy; 2025 Công ty ABC. Mọi quyền được bảo lưu.</div>\n    </div>\n</body>\n</html>",
+        "sender": "lam058b@gmail.com",
+        "receipients": "={{ $('Webhook').item.json.body.email }}",
+        "additionalFields": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.sendInBlue",
+      "typeVersion": 1,
+      "position": [
+        180,
+        1160
+      ],
+      "id": "3fdcfe1c-222a-4948-aa2d-1929ab4a1196",
+      "name": "Brevo",
+      "credentials": {
+        "sendInBlueApi": {
+          "id": "ICm9C4DlcUwxN6hP",
+          "name": "Brevo account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "users",
+        "options": {},
+        "query": "={\"email\": \"{{ $('Webhook1').item.json.body.user_email }}\"}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        280
+      ],
+      "id": "ab1c31be-53fa-4f44-856b-9722ab2899c9",
+      "name": "MongoDB4",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "C3uZAYo0RTizupaf",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96e57ecd-fd86-43d1-b10e-ccccdd988fbf",
+              "name": "_id",
+              "value": "={{ $json._id }}",
+              "type": "string"
+            },
+            {
+              "id": "64fc21da-b31c-40c1-8abf-f61100b92ad8",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "606b8e09-4691-4f51-a040-189ba1f4e887",
+              "name": "lead_score",
+              "value": "={{ $json.lead_score + 10 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        540,
+        280
+      ],
+      "id": "0fc3da80-82ec-48b3-9e46-5b30b83c9a1f",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "users",
+        "updateKey": "email",
+        "fields": "=lead_score",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        280
+      ],
+      "id": "1549849f-439e-464c-8d0e-99e602b253e4",
+      "name": "MongoDB5",
+      "credentials": {
+        "mongoDb": {
+          "id": "C3uZAYo0RTizupaf",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "unique_opened",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Opened"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e41a1ed1-aa3b-478e-85df-8b40799e5aab",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "unsubcribed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Unsubcribed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        180,
+        1420
+      ],
+      "id": "96178042-a1ed-4c49-8881-24f420ea756b",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96e57ecd-fd86-43d1-b10e-ccccdd988fbf",
+              "name": "_id",
+              "value": "={{ $json._id }}",
+              "type": "string"
+            },
+            {
+              "id": "64fc21da-b31c-40c1-8abf-f61100b92ad8",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "606b8e09-4691-4f51-a040-189ba1f4e887",
+              "name": "lead_score",
+              "value": "={{ $json.lead_score - 10 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        1520
+      ],
+      "id": "85d9ec50-3732-4c54-a045-f0ecd7bf8eef",
+      "name": "Edit Fields8"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "users",
+        "updateKey": "email",
+        "fields": "=lead_score",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        620,
+        1520
+      ],
+      "id": "96bc2012-2233-471f-bf67-58ab8cacdd5e",
+      "name": "MongoDB6",
+      "credentials": {
+        "mongoDb": {
+          "id": "C3uZAYo0RTizupaf",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -260,
+        1820
+      ],
+      "id": "048aaeee-3906-4cc5-96c8-8f3cf539c1ff",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "collection": "users",
+        "options": {},
+        "query": "{\n  \"lead_score\": { \"$gte\": 20 }\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -40,
+        1820
+      ],
+      "id": "eedade55-d6f0-4ff2-99e5-204e26469274",
+      "name": "MongoDB",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "C3uZAYo0RTizupaf",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.lead_score }}",
+                    "rightValue": 20,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Vip"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "055aa639-ee41-4faf-a054-d7f4f6a22438",
+                    "leftValue": "={{ $json.lead_score }}",
+                    "rightValue": 30,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Royal"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        180,
+        1820
+      ],
+      "id": "3b2474b3-b140-47dd-84ba-c23d3b1b22c7",
+      "name": "Switch4"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('MongoDB').item.json.email }}",
+        "subject": "Tri ân khách hàng VIP",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Tri Ân Khách Hàng</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; margin: 0; padding: 0;\">\n    <table width=\"100%\" bgcolor=\"#f4f4f4\" cellpadding=\"0\" cellspacing=\"0\">\n        <tr>\n            <td>\n                <table width=\"600\" align=\"center\" bgcolor=\"#ffffff\" cellpadding=\"20\" cellspacing=\"0\">\n                    <tr>\n                        <td align=\"center\" style=\"background-color: #0073e6; color: #ffffff; padding: 20px;\">\n                            <h1>Cảm Ơn Quý Khách!</h1>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td>\n                            <p>Chúng tôi chân thành cảm ơn quý khách <><> đã đồng hành cùng chúng tôi. Sự ủng hộ của quý khách là động lực giúp chúng tôi không ngừng phát triển.</p>\n                            <p>Để tri ân, chúng tôi gửi đến quý khách một mã giảm giá đặc biệt:</p>\n                            <h2 style=\"text-align: center; color: #0073e6;\">THANKYOU20</h2>\n                            <p>Hãy sử dụng mã này để nhận ưu đãi khi mua hàng tiếp theo.</p>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td align=\"center\">\n                            <a href=\"#\" style=\"background-color: #0073e6; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">Sử Dụng Ngay</a>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td align=\"center\" style=\"font-size: 12px; color: #666;\">\n                        </td>\n                    </tr>\n                </table>\n            </td>\n        </tr>\n    </table>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        1720
+      ],
+      "id": "ebc30187-2cfc-4b73-b489-a857c6df8c69",
+      "name": "Gmail9",
+      "webhookId": "043eb77d-0453-4a21-8bac-8a3628146850",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nIdbLIu5f55l0ovG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('MongoDB').item.json.email }}",
+        "subject": "Tri ân khách hàng ROYAL",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Tri Ân Khách Hàng</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; margin: 0; padding: 0;\">\n    <table width=\"100%\" bgcolor=\"#f4f4f4\" cellpadding=\"0\" cellspacing=\"0\">\n        <tr>\n            <td>\n                <table width=\"600\" align=\"center\" bgcolor=\"#ffffff\" cellpadding=\"20\" cellspacing=\"0\">\n                    <tr>\n                        <td align=\"center\" style=\"background-color: #0073e6; color: #ffffff; padding: 20px;\">\n                            <h1>Cảm Ơn Quý Khách!</h1>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td>\n                            <p>Chúng tôi chân thành cảm ơn quý khách <><> đã đồng hành cùng chúng tôi. Sự ủng hộ của quý khách là động lực giúp chúng tôi không ngừng phát triển.</p>\n                            <p>Để tri ân, chúng tôi gửi đến quý khách một mã giảm giá đặc biệt:</p>\n                            <h2 style=\"text-align: center; color: #0073e6;\">THANKYOU20</h2>\n                            <p>Hãy sử dụng mã này để nhận ưu đãi khi mua hàng tiếp theo.</p>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td align=\"center\">\n                            <a href=\"#\" style=\"background-color: #0073e6; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">Sử Dụng Ngay</a>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td align=\"center\" style=\"font-size: 12px; color: #666;\">\n                        </td>\n                    </tr>\n                </table>\n            </td>\n        </tr>\n    </table>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        1920
+      ],
+      "id": "a8ed1714-4541-4f35-b56b-78752b3128fb",
+      "name": "Gmail10",
+      "webhookId": "4e25cd4a-db34-45ea-bbce-7439f9b384ab",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nIdbLIu5f55l0ovG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const phoneRaw = $('Webhook1').first().json.body.phone;\n\nitems[0].json.formattedPhone = phoneRaw.replace(/^0/, '+84');\n\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        -100
+      ],
+      "id": "196809e7-fe75-4fe3-a234-36ff3bc7b4b5",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "content": "## EMAIL TRACKING AND CLASSIFICATION OF POTENTIAL CUSTOMERS\n",
+        "height": 1120,
+        "width": 1460,
+        "color": 5
+      },
+      "id": "dd7de51d-f943-4382-9c77-6d012d0dc97c",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -420,
+        1020
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## CUSTOMER CARE\n",
+        "height": 820,
+        "width": 1460,
+        "color": 5
+      },
+      "id": "b2a0446b-e5a0-49b8-9515-bc74c6aeaa4f",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -140
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Gmail2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "MongoDB4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Brevo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB2": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "MongoDB3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "MongoDB2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brevo": {
+      "main": [
+        []
+      ]
+    },
+    "MongoDB4": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "MongoDB5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields8": {
+      "main": [
+        [
+          {
+            "node": "MongoDB6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "Switch4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch4": {
+      "main": [
+        [
+          {
+            "node": "Gmail9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        []
+      ]
+    },
+    "Gmail2": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e55afaa9-4ab4-4ab1-8f3d-4f4d30cc8d61",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aeae5a2c653edff42ddffede5d48ef0d50e25d4e33bdeccb96644a3f90b1fbd4"
+  },
+  "id": "1Wa0ZFivUIqyc4DL",
+  "tags": []
+}
