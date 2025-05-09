@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments, faTimes, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { useNavigate } from 'react-router-dom';
 
 const ChatWidget = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
@@ -68,16 +70,16 @@ const ChatWidget = () => {
 
   const parseDoctorJSON = (text) => {
     try {
-      const cleaned = text
-        .replace(/^```json\s*/i, '')
-        .replace(/```$/, '')
-        .trim();
-      const parsed = JSON.parse(cleaned);
+      const match = text.match(/```json\s*([\s\S]*?)\s*```/i);
+      if (!match || !match[1]) return null;
+  
+      const parsed = JSON.parse(match[1].trim());
       return parsed?.doctors || null;
     } catch (err) {
+      console.error('Lỗi khi parse JSON bác sĩ:', err);
       return null;
     }
-  };
+  };  
 
   const DoctorCard = React.memo(({ doctor }) => (
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm mb-2">
@@ -89,20 +91,23 @@ const ChatWidget = () => {
         />
       )}
       <h4 className="text-lg font-semibold text-gray-800">{doctor.name}</h4>
-      <p className="text-sm text-gray-600"><span className="font-medium">Chuyên khoa:</span> {doctor.specialty}</p>
+      <p className="text-sm text-gray-600"><span className="font-medium">Chuyên khoa:</span> {doctor.speciality}</p>
       <p className="text-sm text-gray-600"><span className="font-medium">Kinh nghiệm:</span> {doctor.experience}</p>
-      <p className="text-sm text-gray-600"><span className="font-medium">Địa chỉ:</span> {doctor.address}</p>
+      <p className="text-sm text-gray-600">
+        <span className="font-medium">Địa chỉ:</span> {doctor.address.line1}, {doctor.address.line2}
+      </p>
       {doctor.fee && (
         <p className="text-sm text-gray-600"><span className="font-medium">Phí khám:</span> ${doctor.fee}</p>
       )}
       <button
-        onClick={() => setInput(`Tôi muốn đặt lịch với bác sĩ ${doctor.name}`)}
+        onClick={() => navigate(`/appointment/${doctor._id}`)}
         className="mt-2 bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
       >
         Đặt lịch hẹn
       </button>
     </div>
   ));
+  
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
