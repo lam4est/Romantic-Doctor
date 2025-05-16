@@ -61,7 +61,7 @@ const MyAppointments = () => {
   const payOnline = async (appointmentId) => {
     try {
       const { data } = await axios.post(
-        backendUrl + '/api/user/payment-paypal',
+        backendUrl + '/api/user/momo-payment',
         { appointmentId },
         { headers: { token } }
       );
@@ -79,7 +79,7 @@ const MyAppointments = () => {
   const capturePayment = async (orderId, appointmentId) => {
     try {
       const { data } = await axios.post(
-        backendUrl + '/api/user/capture-paypal-payment',
+        backendUrl + '/api/user/capture-momo-payment',
         { orderId, appointmentId },
         { headers: { token } }
       );

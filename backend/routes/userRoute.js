@@ -7,8 +7,8 @@ import {
     loginUser, 
     registerUser, 
     updateProfile, 
-    paymentPaypal, 
-    capturePaypalPayment,
+    momoWebhookHandler,
+    paymentMomo,
     handleChatMessage,
     startChatSession
 } from '../controllers/userController.js';
@@ -24,8 +24,8 @@ userRouter.post('/update-profile', upload.single('image'), authUser, updateProfi
 userRouter.post('/book-appointment', authUser, bookAppointment);
 userRouter.get('/appointments', authUser, listAppointment);
 userRouter.post('/cancel-appointment', authUser, cancelAppointment);
-userRouter.post('/payment-paypal', authUser, paymentPaypal); 
-userRouter.post('/capture-paypal-payment', authUser, capturePaypalPayment); 4
+userRouter.post('/momo-payment', authUser, paymentMomo); 
+userRouter.post('/capture-momo-payment', momoWebhookHandler); 
 userRouter.post('/chat', handleChatMessage);
 userRouter.post('/start-chat-session', startChatSession);
 

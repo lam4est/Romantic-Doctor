@@ -6,7 +6,6 @@ import { v2 as cloudinary } from 'cloudinary';
 import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import axios from 'axios';
-import paypal from '@paypal/checkout-server-sdk';
 import crypto from 'crypto';
 
 // API to register user
@@ -260,92 +259,121 @@ const cancelAppointment = async (req, res) => {
   }
 };
 
-const environment = new paypal.core.SandboxEnvironment(
-  process.env.PAYPAL_KEY_ID,
-  process.env.PAYPAL_KEY_SECRET
-);
-
-const paypalClient = new paypal.core.PayPalHttpClient(environment);
-
-// API to initiate PayPal payment
-const paymentPaypal = async (req, res) => {
+const paymentMomo = async (req, res) => {
   try {
     const { appointmentId } = req.body;
     const appointmentData = await appointmentModel.findById(appointmentId);
-
     if (!appointmentData || appointmentData.cancelled) {
       return res.json({ success: false, message: "Appointment cancelled or not found" });
     }
-
     if (appointmentData.payment) {
       return res.json({ success: false, message: "Appointment already paid" });
     }
 
-    const request = new paypal.orders.OrdersCreateRequest();
-    request.requestBody({
-      intent: 'CAPTURE',
-      purchase_units: [{
-        amount: {
-          currency_code: process.env.CURRENCY || 'USD',
-          value: appointmentData.amount.toString(),
-        },
-        description: `Thanh toán lịch hẹn với bác sĩ ${appointmentData.docData.name}`,
-      }],
-      application_context: {
-        return_url: `http://localhost:5173/my-appointments?appointmentId=${appointmentId}`,
-        cancel_url: 'http://localhost:5173/book-appointment',
-      },
+    const partnerCode = process.env.MOMO_PARTNER_CODE;
+    const accessKey = process.env.MOMO_ACCESS_KEY;
+    const secretKey = process.env.MOMO_SECRET_KEY;
+    const requestId = `${partnerCode}${Date.now()}`;
+    const orderId = requestId;
+    const usdAmount = appointmentData.amount;
+    const exchangeRate = 24000; // USD to VND exchange rate
+    const amountVND = Math.round(usdAmount * exchangeRate);
+    const amount = amountVND.toString();
+
+    const orderInfo = `Thanh toán lịch hẹn với bác sĩ ${appointmentData.docData.name}`;
+    const redirectUrl = `http://localhost:5173/my-appointments?appointmentId=${appointmentId}`;
+    const ipnUrl = `https://ad87-116-110-120-189.ngrok-free.app/api/user/capture-momo-payment`; //ngrok backend URL
+    // callback URL for MoMo to send payment result - quan trong
+    const requestType = "captureWallet";
+    const extraData = JSON.stringify({
+      appointmentId,
+      userId: appointmentData.userId
     });
 
-    const order = await paypalClient.execute(request);
-    const approvalUrl = order.result.links.find(link => link.rel === 'approve').href;
+    const rawSignature =
+      `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}` +
+      `&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}` +
+      `&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
 
-    res.json({ success: true, redirectUrl: approvalUrl });
+    const signature = crypto.createHmac('sha256', secretKey)
+      .update(rawSignature)
+      .digest('hex');
+
+    const requestBody = {
+      partnerCode,
+      accessKey,
+      requestId,
+      amount,
+      orderId,
+      orderInfo,
+      redirectUrl,
+      ipnUrl,
+      extraData,
+      requestType,
+      signature,
+      lang: 'vi'
+    };
+
+    const momoRes = await axios.post('https://test-payment.momo.vn/v2/gateway/api/create', requestBody, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (momoRes.data && momoRes.data.payUrl) {
+      res.json({ success: true, redirectUrl: momoRes.data.payUrl });
+    } else {
+      res.json({ success: false, message: 'Dont create momo payment gateway', result: momoRes.data });
+    }
   } catch (error) {
-    console.log(error);
+    console.error(error.response?.data || error.message);
     res.json({ success: false, message: error.message });
   }
 };
 
-// API to capture PayPal payment
-const capturePaypalPayment = async (req, res) => {
-    try {
-      const { orderId, appointmentId, userId } = req.body;
-  
-      const request = new paypal.orders.OrdersCaptureRequest(orderId);
-      request.requestBody({});
-      const capture = await paypalClient.execute(request);
-  
-      if (capture.result.status === 'COMPLETED') {
-        
-        const appointmentData = await appointmentModel.findByIdAndUpdate(appointmentId, { payment: true }, { new: true });
-        const userData = await userModel.findById(userId);
-  
-        await axios.post("http://localhost:5678/webhook-test/appointment-webhook", {
-          event_type: "appointment-payment",
-          appointment_id: appointmentData._id,
-          user_id: appointmentData.userId,
-          doc_id: appointmentData.docId,
-          amount: appointmentData.amount,
-          slot_date: appointmentData.slotDate,
-          slot_time: appointmentData.slotTime,
-          payment_date: Date.now(),
-          doctor_name: appointmentData.docData.name,
-          user_email: appointmentData.userData.email,
-          user_name: appointmentData.userData.name,
-          is_paid: true, 
-          lead_score: userData.lead_score
-        });
-  
-        res.json({ success: true, message: 'Payment captured successfully' });
-      } else {
-        res.json({ success: false, message: 'Payment capture failed' });
+const momoWebhookHandler = async (req, res) => {
+  try {
+    const { resultCode, extraData } = req.body;
+    const parsedExtra = JSON.parse(extraData || "{}");
+    const appointmentId = parsedExtra.appointmentId;
+    const userId = parsedExtra.userId;
+
+    if (resultCode === 0) {
+      const appointmentData = await appointmentModel.findByIdAndUpdate(
+        appointmentId,
+        { payment: true },
+        { new: true }
+      );
+
+      if (!appointmentData) {
+        return res.status(404).send("Appointment not found");
       }
-    } catch (error) {
-      console.log(error);
-      res.json({ success: false, message: error.message });
+
+      const userData = await userModel.findById(userId);
+
+      await axios.post("http://localhost:5678/webhook-test/appointment-webhook", {
+        event_type: "appointment-payment",
+        appointment_id: appointmentData._id,
+        user_id: appointmentData.userId,
+        doc_id: appointmentData.docId,
+        amount: appointmentData.amount,
+        slot_date: appointmentData.slotDate,
+        slot_time: appointmentData.slotTime,
+        payment_date: Date.now(),
+        doctor_name: appointmentData.docData?.name,
+        user_email: appointmentData.userData?.email,
+        user_name: appointmentData.userData?.name,
+        is_paid: true,
+        lead_score: userData?.lead_score
+      });
+
+      return res.status(200).send("OK");
     }
-  };
+
+    return res.status(400).send("Payment failed or cancelled");
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send("Internal server error");
+  }
+};
 
   const startChatSession = (req, res) => {
     const sessionKey = crypto.randomBytes(16).toString('hex');
@@ -381,8 +409,8 @@ export {
   bookAppointment,
   listAppointment,
   cancelAppointment,
-  paymentPaypal,
-  capturePaypalPayment,
+  paymentMomo,
+  momoWebhookHandler,
   handleChatMessage,
   startChatSession
 };
