@@ -3,8 +3,11 @@ import bcrypt from 'bcryptjs'
 import {v2 as cloudinary} from "cloudinary"
 import doctorModel from "../models/doctorModel.js"
 import appointmentModel from "../models/appointmentModel.js"
+import Workflow from '../models/workflow.js'
+import WorkflowDetail from '../models/workflowDetail.js'
 import jwt from 'jsonwebtoken'
 import userModel from "../models/userModel.js"
+import axios from 'axios'
 
 //API for adding doctor
 const addDoctor = async(req, res) =>{
@@ -147,4 +150,45 @@ const adminDashboard = async(req,res) =>{
     }
 }
 
-export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard };
+const getAllWorkflows = async (req, res) => {
+  try {
+    const workflows = await Workflow.find().sort({ createdAt: -1 })
+    res.json({ success: true, workflows })
+  } catch (error) {
+    res.json({ success: false, message: error.message })
+  }
+}
+
+const syncWorkflowFromN8n = async (req, res) => {
+  try {
+    const { n8nWorkflowId } = req.body
+    const { data } = await axios.get(`${n8nApiUrl}/workflows/${n8nWorkflowId}`, {
+  headers: {
+    'X-N8N-API-KEY': process.env.N8N_API_KEY
+  }
+})
+
+    let workflow = await Workflow.findOne({ n8nWorkflowId })
+    if (!workflow) {
+      workflow = await Workflow.create({
+        name: data.name,
+        n8nWorkflowId: data.id,
+        active: data.active,
+      })
+    }
+
+    await WorkflowDetail.findOneAndUpdate(
+      { n8nWorkflowId },
+      { json: data, workflowId: workflow._id },
+      { upsert: true, new: true }
+    )
+
+    res.json({ success: true, message: "Workflow synced", workflowId: workflow._id })
+  } catch (error) {
+    res.json({ success: false, message: error.message })
+  }
+}
+
+const n8nApiUrl = 'http://localhost:5678/api/v1'
+
+export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard, getAllWorkflows, syncWorkflowFromN8n};

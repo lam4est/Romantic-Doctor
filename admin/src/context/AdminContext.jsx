@@ -10,6 +10,7 @@ const AdminContextProvider = (props) => {
     const [doctors, setDoctors] = useState([])
     const [appointments, setAppointments] = useState([])
     const [dashData, setDashData] = useState(false)
+    const [workflows, setWorkflows] = useState([])
 
     const backendUrl = "http://localhost:4000"
 
@@ -84,6 +85,16 @@ const AdminContextProvider = (props) => {
         }
     }
 
+    const getAllWorkflows = async () => {
+        const { data } = await axios.get(`${backendUrl}/api/admin/workflows`)
+        if (data.success) setWorkflows(data.workflows)
+    }
+
+    const createWorkflow = async (name, n8nWorkflowId) => {
+        const { data } = await axios.post(`${backendUrl}/api/admin/workflow`, { name, n8nWorkflowId })
+        if (data.success) getAllWorkflows()
+    }
+
     const value = {
         aToken, setAToken,
         backendUrl, doctors,
@@ -91,7 +102,8 @@ const AdminContextProvider = (props) => {
         appointments, setAppointments,
         getAllAppointments,
         cancelAppointment,
-        dashData, getDashData
+        dashData, getDashData,
+        workflows, getAllWorkflows, createWorkflow
     }
     
 
