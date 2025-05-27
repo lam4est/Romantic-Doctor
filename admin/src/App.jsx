@@ -11,6 +11,7 @@ import AllApointments from './pages/Admin/AllApointments';
 import AddDoctor from './pages/Admin/AddDoctor';
 import DoctorsList from './pages/Admin/DoctorsList';
 import WorkflowList from './pages/Admin/WorkflowList';
+import WorkflowEditorPage from './pages/Admin/WorkflowEditorPage';
 
 const App = () => {
 
@@ -29,6 +30,7 @@ const App = () => {
           <Route path='/add-doctor' element={<AddDoctor/>} />
           <Route path='/doctor-list' element={<DoctorsList/>} />
           <Route path="/admin/workflows" element={<WorkflowList />} />
+          <Route path="/admin/workflows/:id" element={<WorkflowEditorPage />} />
         </Routes>
       </div>
     </div>

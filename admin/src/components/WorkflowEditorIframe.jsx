@@ -4,11 +4,16 @@ const WorkflowEditorIframe = ({ workflowId }) => {
   if (!workflowId) return null;
 
   return (
-    <iframe
-      title="Workflow Editor"
-      src={`http://localhost:5678/workflows/${workflowId}`}
-      className="w-full h-[90vh] border mt-6 rounded-md shadow"
-    />
+    <div
+      className="resize overflow-auto border rounded-md shadow mt-2"
+      style={{ width: "100%", minHeight: "500px" }}>
+      <iframe
+        title="Workflow Editor"
+        src={`http://localhost:5678/workflow/${workflowId}`}
+        className="w-full h-full"
+        style={{ minHeight: "500px", minWidth: "1200px", border: "none" }}
+      />
+    </div>
   );
 };
 

@@ -5,6 +5,7 @@ import WorkflowEditorIframe from "../../components/WorkflowEditorIframe";
 import CreateWorkflowModal from "../../components/CreateModal";
 import ConfirmDeleteModal from "../../components/ConfirmDeleteModal";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const WorkflowList = () => {
   const { getAllWorkflows, workflows, createWorkflow, deleteWorkflow } =
@@ -14,13 +15,14 @@ const WorkflowList = () => {
   const [workflowName, setWorkflowName] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [workflowToDelete, setWorkflowToDelete] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getAllWorkflows();
   }, []);
 
   const handleEdit = (workflowId) => {
-    setSelectedWorkflowId(workflowId);
+    navigate(`/admin/workflows/${workflowId}`);
   };
 
   const handleDelete = (workflowId) => {
@@ -29,19 +31,19 @@ const WorkflowList = () => {
   };
 
   const handleConfirmDelete = async () => {
-  if (workflowToDelete) {
-    try {
-      await deleteWorkflow(workflowToDelete);
-      toast.success("Xoá workflow thành công!");
-    } catch (error) {
-      toast.error("Xoá thất bại, vui lòng thử lại.");
-      console.error("Lỗi khi xoá workflow:", error);
-    } finally {
-      setWorkflowToDelete(null);
-      setShowDeleteModal(false);
+    if (workflowToDelete) {
+      try {
+        await deleteWorkflow(workflowToDelete);
+        toast.success("Xoá workflow thành công!");
+      } catch (error) {
+        toast.error("Xoá thất bại, vui lòng thử lại.");
+        console.error("Lỗi khi xoá workflow:", error);
+      } finally {
+        setWorkflowToDelete(null);
+        setShowDeleteModal(false);
+      }
     }
-  }
-};
+  };
 
   const handleCreateNewWorkflow = () => {
     setShowModal(true);
@@ -68,7 +70,7 @@ const WorkflowList = () => {
         <button
           onClick={handleCreateNewWorkflow}
           className="px-4 py-1 text-sm text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-600 hover:text-white"
-        >
+>
           Tạo Workflow Mới
         </button>
       </div>
