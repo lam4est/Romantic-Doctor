@@ -250,7 +250,6 @@ const deleteWorkflow = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Bước 1: Tìm workflow trong MongoDB theo _id
     const workflow = await Workflow.findById(id);
     if (!workflow) {
       return res.status(404).json({ message: 'Workflow not found in database' });
@@ -258,7 +257,6 @@ const deleteWorkflow = async (req, res) => {
 
     const n8nWorkflowId = workflow.n8nWorkflowId;
 
-    // Bước 2: Xoá trên n8n
     const response = await axios.delete(`${process.env.N8N_API_URL}/workflows/${n8nWorkflowId}`, {
       headers: {
         'X-N8N-API-KEY': process.env.N8N_API_KEY,

@@ -10,34 +10,46 @@ const syncAllWorkflowsFromN8n = async () => {
       },
     });
 
-    const workflows = response.data.data; // ✅
+    const workflows = response.data.data;
 
     if (!Array.isArray(workflows)) {
       throw new Error("Dữ liệu từ n8n trả về không hợp lệ");
     }
 
-    await Workflow.deleteMany({});
-    await WorkflowDetail.deleteMany({});
-
     for (const workflow of workflows) {
-      const newWorkflow = new Workflow({
-        name: workflow.name,
-        n8nWorkflowId: workflow.id,
-        active: workflow.active,
-      });
+      const existing = await Workflow.findOne({ n8nWorkflowId: workflow.id });
 
-      const savedWorkflow = await newWorkflow.save();
+      let workflowDoc;
+      if (existing) {
+        existing.name = workflow.name;
+        existing.active = workflow.active;
+        await existing.save();
+        workflowDoc = existing;
+      } else {
+        workflowDoc = await Workflow.create({
+          name: workflow.name,
+          n8nWorkflowId: workflow.id,
+          active: workflow.active,
+        });
+      }
 
-      const newDetail = new WorkflowDetail({
-        workflowId: savedWorkflow._id,
-        n8nWorkflowId: workflow.id,
-        json: workflow,
-      });
+      // Cập nhật hoặc tạo mới detail
+      const detailExisting = await WorkflowDetail.findOne({ n8nWorkflowId: workflow.id });
 
-      await newDetail.save();
+      if (detailExisting) {
+        detailExisting.json = workflow;
+        detailExisting.workflowId = workflowDoc._id;
+        await detailExisting.save();
+      } else {
+        await WorkflowDetail.create({
+          workflowId: workflowDoc._id,
+          n8nWorkflowId: workflow.id,
+          json: workflow,
+        });
+      }
     }
 
-    console.log(`[SYNC SUCCESS] Đã đồng bộ ${workflows.length} workflow từ n8n.`);
+    console.log(`[SYNC SUCCESS] Đồng bộ ${workflows.length} workflows từ n8n.`);
   } catch (error) {
     console.error("[SYNC ERROR]:", {
       message: error.message,
