@@ -53,7 +53,7 @@ const WorkflowTable = ({ workflows, onEdit, onDelete, onToggleActive }) => {
                 </button>
 
                 <button
-                  onClick={() => onToggleActive(w._id, !w.active)}
+                  onClick={() => onToggleActive(w._id, w.active)}
                   className="text-green-600 hover:text-green-800 transition"
                   title="Toggle"
                 >

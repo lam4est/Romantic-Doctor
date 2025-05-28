@@ -1,5 +1,5 @@
 import express from 'express'
-import { addDoctor, adminDashboard, allDoctors, appointmentCancel, appointmentsAdmin, loginAdmin, getAllWorkflows, createWorkflow ,deleteWorkflow} from '../controllers/adminController.js'
+import { addDoctor, adminDashboard, allDoctors, appointmentCancel, appointmentsAdmin, loginAdmin, getAllWorkflows, createWorkflow , deleteWorkflow, toggleWorkflowActive} from '../controllers/adminController.js'
 import upload from '../middlewares/multer.js'
 import authAdmin from '../middlewares/authAdmin.js'
 import { changeAvailablity } from '../controllers/doctorController.js'
@@ -16,5 +16,6 @@ adminRouter.get('/dashboard', authAdmin, adminDashboard)
 adminRouter.get('/workflows', getAllWorkflows)
 adminRouter.post('/workflows', createWorkflow)
 adminRouter.delete('/workflows/:id', deleteWorkflow);
+adminRouter.post('/workflows/:id/toggle-active', toggleWorkflowActive);
 
 export default adminRouter

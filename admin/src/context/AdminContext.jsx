@@ -139,6 +139,25 @@ const deleteWorkflow = async (workflowId) => {
   }
 };
 
+const toggleWorkflowActive = async (workflowId, newStatus) => {
+  try {
+    const res = await axios.post(
+      `${backendUrl}/api/admin/workflows/${workflowId}/toggle-active`,
+      { active: newStatus }
+    );
+
+    if (res.data.success) {
+      toast.success("Cập nhật trạng thái thành công");
+      getAllWorkflows();
+    } else {
+      toast.error(res.data.message || "Cập nhật trạng thái thất bại");
+    }
+  } catch (error) {
+    console.error("Lỗi khi cập nhật trạng thái workflow:", error);
+    toast.error("Lỗi khi cập nhật trạng thái, workflow phải có ít nhất 1 node để có thể kích hoạt.");
+  }
+};
+
   const value = {
     aToken,
     setAToken,
@@ -156,6 +175,7 @@ const deleteWorkflow = async (workflowId) => {
     getAllWorkflows,
     createWorkflow,
     deleteWorkflow,
+    toggleWorkflowActive
   };
 
   return (

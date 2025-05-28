@@ -278,6 +278,38 @@ const deleteWorkflow = async (req, res) => {
   }
 };
 
+const toggleWorkflowActive = async (req, res) => {
+  const { id } = req.params;
+  const { active } = req.body; 
+
+  try {
+    const workflow = await Workflow.findById(id);
+    if (!workflow) {
+      return res.status(404).json({ success: false, message: 'Workflow not found' });
+    }
+
+    const n8nWorkflowId = workflow.n8nWorkflowId;
+
+    await axios.post(`${process.env.N8N_API_URL}/workflows/${n8nWorkflowId}/${active ? 'activate' : 'deactivate'}`, {} , {
+      headers: {
+        'X-N8N-API-KEY': process.env.N8N_API_KEY,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    await syncAllWorkflowsFromN8n(); 
+
+    return res.json({ success: true, message: 'Workflow status updated' });
+  } catch (error) {
+    console.error('Lỗi khi thay đổi trạng thái workflow:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi server khi thay đổi trạng thái workflow',
+      error: error.message,
+    });
+  }
+};
+
 export {
   addDoctor,
   loginAdmin,
@@ -288,4 +320,5 @@ export {
   getAllWorkflows,
   createWorkflow,
   deleteWorkflow,
+  toggleWorkflowActive
 };

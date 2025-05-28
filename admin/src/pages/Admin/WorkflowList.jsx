@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 const WorkflowList = () => {
-  const { getAllWorkflows, workflows, createWorkflow, deleteWorkflow } =
+  const { getAllWorkflows, workflows, createWorkflow, deleteWorkflow, toggleWorkflowActive } =
     useContext(AdminContext);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -23,6 +23,10 @@ const WorkflowList = () => {
 
   const handleEdit = (workflowId) => {
     navigate(`/admin/workflows/${workflowId}`);
+  };
+
+  const handleToggleActive = async (workflowId, currentStatus) => {
+    await toggleWorkflowActive(workflowId, !currentStatus);
   };
 
   const handleDelete = (workflowId) => {
@@ -79,7 +83,7 @@ const WorkflowList = () => {
         workflows={workflows}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onToggleActive={() => {}}
+        onToggleActive={handleToggleActive}
       />
 
       <WorkflowEditorIframe workflowId={selectedWorkflowId} />
