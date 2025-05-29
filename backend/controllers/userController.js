@@ -40,7 +40,7 @@ const registerUser = async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
-    await axios.post('http://localhost:5678/webhook-test/register-user', {
+    await axios.post('http://localhost:5678/webhook/register-user', {
       userId: user._id,
       name: user.name,
       email: user.email,
@@ -157,7 +157,7 @@ const bookAppointment = async (req, res) => {
     const newAppointment = new appointmentModel(appointmentData);
     await newAppointment.save();
 
-    await axios.post("http://localhost:5678/webhook-test/appointment-webhook", {
+    await axios.post("http://localhost:5678/webhook/appointment-webhook", {
       event_type: "appointment-created",
       appointment_id: newAppointment._id, 
       email: userData.email,
@@ -184,7 +184,7 @@ const bookAppointment = async (req, res) => {
           await doctorModel.findByIdAndUpdate(docId, { slots_booked: updatedSlots });
 
           try {
-            await axios.post("http://localhost:5678/webhook-test/appointment-webhook", {
+            await axios.post("http://localhost:5678/webhook/appointment-webhook", {
               event_type: "appointment-cancelled",
               email: userData.email,
               name: userData.name,
@@ -242,7 +242,7 @@ const cancelAppointment = async (req, res) => {
     slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime);
     await doctorModel.findByIdAndUpdate(docId, { slots_booked });
 
-    await axios.post("http://localhost:5678/webhook-test/appointment-webhook", {
+    await axios.post("http://localhost:5678/webhook/appointment-webhook", {
       event_type: "appointment-cancelled",
       appointment_id: appointmentId,
       email: req.body.email || appointmentData.userData.email,
@@ -349,7 +349,7 @@ const momoWebhookHandler = async (req, res) => {
 
       const userData = await userModel.findById(userId);
 
-      await axios.post("http://localhost:5678/webhook-test/appointment-webhook", {
+      await axios.post("http://localhost:5678/webhook/appointment-webhook", {
         event_type: "appointment-payment",
         appointment_id: appointmentData._id,
         user_id: appointmentData.userId,
