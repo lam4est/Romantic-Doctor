@@ -13,7 +13,7 @@ const AdminContextProvider = (props) => {
   const [dashData, setDashData] = useState(false);
   const [workflows, setWorkflows] = useState([]);
 
-  const backendUrl = "http://localhost:4000";
+  const backendUrl = "VITE_BACKEND_URL";
 
   const getAllDoctors = async () => {
     try {
