@@ -10,7 +10,8 @@ import {
     momoWebhookHandler,
     paymentMomo,
     handleChatMessage,
-    startChatSession
+    startChatSession,
+    verifyPassword
 } from '../controllers/userController.js';
 import authUser from '../middlewares/authUser.js';
 import upload from '../middlewares/multer.js';
@@ -28,5 +29,6 @@ userRouter.post('/momo-payment', authUser, paymentMomo);
 userRouter.post('/capture-momo-payment', momoWebhookHandler); 
 userRouter.post('/chat', handleChatMessage);
 userRouter.post('/start-chat-session', startChatSession);
+userRouter.post('/verify-password', authUser, verifyPassword);
 
 export default userRouter;

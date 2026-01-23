@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@paypal/react-paypal-js": "^8.8.2"
+    "@paypal/react-paypal-js": "^8.8.2",
+    "bcryptjs": "^3.0.2"
   }
 }

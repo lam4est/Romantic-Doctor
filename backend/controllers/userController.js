@@ -401,6 +401,40 @@ const momoWebhookHandler = async (req, res) => {
     }
   };  
 
+const verifyPassword = async (req, res) => {
+  try {
+    const { currentPassword } = req.body;
+    const userId = req.body.userId;
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Password verified successfully'
+    });
+  } catch (error) {
+    console.error('Error in verifyPassword:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 export {
   registerUser,
   loginUser,
@@ -412,5 +446,6 @@ export {
   paymentMomo,
   momoWebhookHandler,
   handleChatMessage,
-  startChatSession
+  startChatSession,
+  verifyPassword
 };
